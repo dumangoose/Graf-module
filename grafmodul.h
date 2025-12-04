@@ -80,7 +80,7 @@ struct huffmanTreeNode {
 
 class Graf {
 private:
-    int n, m;                       // csomopontok szama, elek szama
+    int n, m; // csomopontok szama, elek szama
     vector<vector<pair<int, int>>> adjacencyList;
     vector<vector<int>> incidenceMatrix;
     vector<vector<int>> adjacencyMatrix;
