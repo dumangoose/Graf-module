@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // input.txt első sorában 1, ha irányított, 0 ha irányítatlan, 1 ha súlyozott, 0 ha nem
 
 #ifndef GRAFMODUL_H
