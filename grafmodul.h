@@ -746,6 +746,43 @@ public:
         return roads;
     }
 
+    void mooreDistance(int startingNode, vector<int>& d, vector<int>& p) {
+        d.assign(n + 1, INT_MAX);
+        p.assign(n + 1, -1);
+        d[startingNode] = 0;
+        queue<int> q;
+        q.push(startingNode);
+
+        while (q.empty() == false) {
+            int x = q.front();
+            q.pop();
+
+            for (int i = 1; i < adjacencyMatrix[x].size(); i++) {
+                if (adjacencyMatrix[x][i] != INT_MAX && d[i] == INT_MAX) {
+                    p[i] = x;
+                    d[i] = d[x] + 1;
+                    q.push(i);
+                }
+            }
+        }
+    }
+
+    vector<int> moorePath(int startingNode, int endingNode, vector<int>& d, vector<int>& p) {
+        if (d[endingNode] == INT_MAX) {
+            return {};
+        }
+
+        vector<int> path;
+        int current = endingNode;
+        while (current != -1) {
+            path.push_back(current);
+            current = p[current];
+        }
+
+        reverse(path.begin(), path.end());
+        return path;
+    }
+
     vector<int> bellmanFord(node Node) {
         // a legrovidebb utvonalak tavolsagat adja vissza
 
