@@ -1,3 +1,4 @@
+// g++ teszt.cpp -static-libstdc++ -static-libgcc -o p
 #include <iostream>
 #include "grafmodul.h"
 

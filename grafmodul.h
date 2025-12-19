@@ -59,6 +59,12 @@ public:
 
 struct node {
     int value;
+    int expectedTime = 0;
+
+    int ES = 0;
+    int EF = 0;
+    int LS = 0;
+    int LF = 0;
 };
 
 struct edge {
@@ -79,7 +85,7 @@ struct huffmanTreeNode {
 };
 
 class Graf {
-private:
+public:
     int n, m; // csomopontok szama, elek szama
     vector<vector<pair<int, int>>> adjacencyList;
     vector<vector<int>> incidenceMatrix;
@@ -127,6 +133,22 @@ public:
         fillAdjacencyMatrix();
 
         return *this;
+    }
+
+    void setNumberOfNodes(int _n) {
+        n = _n;
+    }
+
+    void setNumberOfEdges(int _m) {
+        m = _m;
+    }
+
+    void setDirection(bool x) {
+        directed = x;
+    }
+
+    void setWeighted(bool x) {
+        weighted = x;
     }
 
     void writeListOfEdges() {
@@ -1333,6 +1355,56 @@ public:
 
         return originalText;
     }
+
+    void CPM(vector<node>& nodes) {
+        if (!directed) {
+            throw HibasTipus();
+        }
+
+        vector<int> topo = topologicalOrder();
+
+        // ---- Forward pass ----
+        for (int u : topo) {
+            nodes[u].EF = nodes[u].ES + nodes[u].expectedTime;
+            for (auto [v, w] : adjacencyList[u]) {
+                nodes[v].ES = max(nodes[v].ES, nodes[u].EF);
+            }
+        }
+
+        int projectTime = 0;
+        for (int i = 1; i < nodes.size(); i++) {
+            projectTime = max(projectTime, nodes[i].EF);
+        }
+
+        // ---- Backward pass ----
+        for (int i = 1; i < nodes.size(); i++) {
+            nodes[i].LF = projectTime;
+        }
+
+        for (int i = topo.size() - 1; i >= 0; i--) {
+            int u = topo[i];
+            nodes[u].LS = nodes[u].LF - nodes[u].expectedTime;
+
+            for (auto [v, w] : adjacencyList[u]) {
+                nodes[u].LF = min(nodes[u].LF, nodes[v].LS);
+                nodes[u].LS = nodes[u].LF - nodes[u].expectedTime;
+            }
+        }
+
+        cout << "\nCPM eredmeny:\n";
+        cout << "Node  ES  EF  LS  LF  Slack\n";
+        for (int i = 1; i < nodes.size(); i++) {
+            cout << i << "     "
+                << nodes[i].ES << "   "
+                << nodes[i].EF << "   "
+                << nodes[i].LS << "   "
+                << nodes[i].LF << "   "
+                << nodes[i].LS - nodes[i].ES << "\n";
+        }
+
+        cout << "Projekt idotartam: " << projectTime << "\n";
+    }
+
 };
 
 #endif
