@@ -1,4 +1,5 @@
 #include "grafmodul.h"
+#include <sstream>
 
 using namespace std;
 
@@ -8,36 +9,37 @@ struct ActivityInput {
     vector<string> predecessors;
 };
 
-
 vector<ActivityInput> readCPM(const string& filename) {
-        ifstream file(filename);
-        if (!file.is_open()) {
-            throw FajlMegnyitas();
-        }
+    ifstream file(filename);
+    if (!file.is_open()) {
+        throw FajlMegnyitas();
+    }
 
-        int n;
-        file >> n;
+    int n;
+    file >> n;
 
-        vector<ActivityInput> input(n);
+    vector<ActivityInput> input(n);
 
-        for (int i = 0; i < n; i++) {
-            file >> input[i].name;
-            file >> input[i].duration;
+    for (int i = 0; i < n; i++) {
+        file >> input[i].name;
+        file >> input[i].duration;
 
-            string pred;
-            file >> pred;
+        string pred;
+        file >> pred;
 
-            if (pred != "-") {
-                size_t pos;
-                while ((pos = pred.find(',')) != string::npos) {
-                    input[i].predecessors.push_back(pred.substr(0, pos));
-                    pred.erase(0, pos + 1);
-                }
-                input[i].predecessors.push_back(pred);
+        if (pred != "-") {
+            stringstream ss(pred);
+            string token;
+
+            while (getline(ss, token, ',')) {
+                input[i].predecessors.push_back(token);
             }
         }
-        return input;
     }
+
+    return input;
+}
+
 
 void buildCPMGraph (Graf& g, vector<node>& nodes, vector<ActivityInput>& input) {
     unordered_map<string, int> id;
