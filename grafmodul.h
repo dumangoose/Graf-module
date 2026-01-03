@@ -1405,6 +1405,53 @@ public:
         cout << "Projekt idotartam: " << projectTime << "\n";
     }
 
+    int edmondsKarp(int source, int sink) {
+        vector<vector<int>> capacity(n + 1, vector<int>(n + 1, 0));
+        
+        for (int i = 0; i < m; i++) {
+            capacity[listOfEdges[i].start][listOfEdges[i].end] = listOfEdges[i].weight;
+        }
+
+        int maxFlow = 0;
+
+        while (true) {
+            vector<int> parent(n + 1, -1);
+            queue<int> q;
+
+            q.push(source);
+            parent[source] = source;
+
+            while (!q.empty() && parent[sink] == -1) {
+                int u = q.front();
+                q.pop();
+
+                for (int v = 1; v <= n; v++) {
+                    if (parent[v] == -1 && capacity[u][v] > 0) {
+                        parent[v] = u;
+                        q.push(v);
+                    }
+                }
+            }
+
+            if (parent[sink] == -1)
+                break;
+
+            int flow = INT_MAX;
+            for (int v = sink; v != source; v = parent[v]) {
+                flow = min(flow, capacity[parent[v]][v]);
+            }
+
+            for (int v = sink; v != source; v = parent[v]) {
+                capacity[parent[v]][v] -= flow;
+                capacity[v][parent[v]] += flow;
+            }
+
+            maxFlow += flow;
+        }
+
+        return maxFlow;
+    }
+
 };
 
 #endif
