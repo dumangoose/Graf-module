@@ -1,3 +1,4 @@
+// g++ valami.cpp -static-libstdc++ -static-libgcc -o p
 #include "grafmodul.h"
 #include <sstream>
 
@@ -95,45 +96,28 @@ void readFlowIntoGraph(const string& filename, Graf& g, int& source, int& sink) 
     g.fillAdjacencyMatrix(); // EZ FONTOS
 }
 
-int edmondsKarp(Graf& g, int source, int sink) {
-    int n = g.n;
-    vector<vector<int>> capacity = g.adjacencyMatrix;
-
-    int maxFlow = 0;
-
-    while (true) {
-        vector<int> parent(n + 1, -1);
-        queue<int> q;
-
-        q.push(source);
-        parent[source] = source;
-
-        while (!q.empty() && parent[sink] == -1) {
-            int u = q.front(); q.pop();
-            for (int v = 1; v <= n; v++) {
-                if (parent[v] == -1 && capacity[u][v] > 0) {
-                    parent[v] = u;
-                    q.push(v);
-                }
-            }
-        }
-
-        if (parent[sink] == -1) break;
-
-        int flow = INT_MAX;
-        for (int v = sink; v != source; v = parent[v]) {
-            flow = min(flow, capacity[parent[v]][v]);
-        }
-
-        for (int v = sink; v != source; v = parent[v]) {
-            capacity[parent[v]][v] -= flow;
-            capacity[v][parent[v]] += flow;
-        }
-
-        maxFlow += flow;
+void readBipartiteIntoGraf(const string& filename, Graf& g, int& nLeft, int& nRight) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        throw FajlMegnyitas();
     }
 
-    return maxFlow;
+    int m;
+    file >> nLeft >> nRight >> m;
+
+    g.setNumberOfNodes(nLeft + nRight);
+    g.setDirection(false);
+    g.setWeighted(false);
+    g.listOfEdges.clear();
+
+    for (int i = 0; i < m; i++) {
+        int u, v;
+        file >> u >> v;
+        g.listOfEdges.push_back({u, nLeft + v});
+    }
+
+    g.setNumberOfEdges(g.listOfEdges.size());
+    g.fillAdjacencyList();
 }
 
 int main() {
@@ -151,10 +135,17 @@ int main() {
 
         readFlowIntoGraph("flow.txt", flowGraph, source, sink);
 
-        flowGraph.writeListOfEdges();
-
         int maxFlow = flowGraph.edmondsKarp(source, sink);
         cout << "Maximalis folyam: " << maxFlow << '\n';
+
+        Graf bipartit;
+        int nLeft, nRight;
+
+        readBipartiteIntoGraf("bipartit.txt", bipartit, nLeft, nRight);
+
+        int maxMatching = bipartit.hopcroftKarp(nLeft, nRight);
+        cout << "Maximalis parositas merete: " << maxMatching << '\n';
+
     }
     catch (exception& e) {
         cout << e.what();

@@ -95,6 +95,11 @@ public:
     bool directed; // 1, ha directed, 0, ha iranyitatlan
     bool weighted; // 1, ha weighted, 0, ha nem
     bool tree; // 1, ha tree, 0, ha nem
+    vector<int> hkPairU;
+    vector<int> hkPairV;
+    vector<int> hkDist;
+    vector<bool> hkIsLeft;
+
 public:
     Graf reading(const char *s) {
         ifstream file(s);
@@ -1363,11 +1368,10 @@ public:
 
         vector<int> topo = topologicalOrder();
 
-        // ---- Forward pass ----
-        for (int u : topo) {
-            nodes[u].EF = nodes[u].ES + nodes[u].expectedTime;
-            for (auto [v, w] : adjacencyList[u]) {
-                nodes[v].ES = max(nodes[v].ES, nodes[u].EF);
+        for (int i = 0; i < topo.size(); i++) {
+            nodes[topo[i]].EF = nodes[topo[i]].ES + nodes[topo[i]].expectedTime;
+            for (auto [v, w] : adjacencyList[topo[i]]) {
+                nodes[v].ES = max(nodes[v].ES, nodes[topo[i]].EF);
             }
         }
 
@@ -1376,7 +1380,6 @@ public:
             projectTime = max(projectTime, nodes[i].EF);
         }
 
-        // ---- Backward pass ----
         for (int i = 1; i < nodes.size(); i++) {
             nodes[i].LF = projectTime;
         }
@@ -1450,6 +1453,78 @@ public:
         }
 
         return maxFlow;
+    }
+
+    int hopcroftKarp(int nLeft, int nRight) {
+        hkPairU.assign(nLeft + 1, 0);
+        hkPairV.assign(nRight + 1, 0);
+        hkDist.assign(nLeft + 1, 0);
+
+        int matching = 0;
+
+        while (bfsHK(nLeft)) {
+            for (int u = 1; u <= nLeft; u++) {
+                if (hkPairU[u] == 0 && dfsHK(u, nLeft)) {
+                    matching++;
+                }
+            }
+        }
+
+        return matching;
+    }
+
+
+    bool bfsHK(int nLeft) {
+        queue<int> q;
+        const int INF = 1e9;
+        bool reachableFreeNode = false;
+
+        for (int u = 1; u <= nLeft; u++) {
+            if (hkPairU[u] == 0) {
+                hkDist[u] = 0;
+                q.push(u);
+            } else {
+                hkDist[u] = INF;
+            }
+        }
+
+        while (!q.empty()) {
+            int u = q.front(); q.pop();
+
+            for (auto [v, w] : adjacencyList[u]) {
+                int right = v - nLeft;
+                int pu = hkPairV[right];
+
+                if (pu == 0) {
+                    reachableFreeNode = true;
+                }
+                else if (hkDist[pu] == INF) {
+                    hkDist[pu] = hkDist[u] + 1;
+                    q.push(pu);
+                }
+            }
+        }
+
+        return reachableFreeNode;
+    }
+
+
+    bool dfsHK(int u, int nLeft) {
+        const int INF = 1e9;
+
+        for (auto [v, w] : adjacencyList[u]) {
+            int right = v - nLeft;
+            int pu = hkPairV[right];
+
+            if (pu == 0 || (hkDist[pu] == hkDist[u] + 1 && dfsHK(pu, nLeft))) {
+                hkPairU[u] = right;
+                hkPairV[right] = u;
+                return true;
+            }
+        }
+
+        hkDist[u] = INF;
+        return false;
     }
 
 };
